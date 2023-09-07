@@ -157,6 +157,8 @@ class stack_test : public Test
 TEST_F(stack_test, isEmptyOnCreation)
 {
     ::testing::Test::RecordProperty("TEST_ID", "2a9ce587-9daf-479d-95da-0df96325023f");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "TES-1");
     EXPECT_THAT(m_sut.size(), Eq(0U));
     EXPECT_THAT(m_sut.capacity(), Eq(STACK_SIZE));
     EXPECT_THAT(m_sut.pop(), Eq(nullopt));
@@ -165,6 +167,7 @@ TEST_F(stack_test, isEmptyOnCreation)
 TEST_F(stack_test, pushingOneElementWithDefaultCtorSucceeds)
 {
     ::testing::Test::RecordProperty("TEST_ID", "f4e91f32-fb20-4502-b0c8-d4b4d4c2bec0");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     ASSERT_TRUE(m_sut.push());
     EXPECT_THAT(m_sut.size(), Eq(1U));
     EXPECT_THAT(m_sut.capacity(), Eq(STACK_SIZE));
@@ -177,6 +180,7 @@ TEST_F(stack_test, pushingOneElementWithDefaultCtorSucceeds)
 TEST_F(stack_test, pushingOneElementWithCustomCtorSucceeds)
 {
     ::testing::Test::RecordProperty("TEST_ID", "c9112cdb-af63-4a55-b8ee-94010dc2d819");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(1U);
 
     auto element = m_sut.pop();
@@ -187,6 +191,7 @@ TEST_F(stack_test, pushingOneElementWithCustomCtorSucceeds)
 TEST_F(stack_test, pushingElementsTillStackIsFullAndPoppingInLIFOOrderSucceeds)
 {
     ::testing::Test::RecordProperty("TEST_ID", "2d12fd5d-ded8-482d-86dd-094660c65f9c");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
 
     for (uint32_t i = 0U; i < STACK_SIZE; ++i)
@@ -201,6 +206,8 @@ TEST_F(stack_test, pushingElementsTillStackIsFullAndPoppingInLIFOOrderSucceeds)
 TEST_F(stack_test, ifCapacityIsExceededPushFails)
 {
     ::testing::Test::RecordProperty("TEST_ID", "6844bc2d-f8e9-4614-ad14-62744a7421f7");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-7");
     pushElements(STACK_SIZE);
 
     EXPECT_FALSE(m_sut.push());
@@ -209,6 +216,7 @@ TEST_F(stack_test, ifCapacityIsExceededPushFails)
 TEST_F(stack_test, popCreatesSpaceForAnotherElement)
 {
     ::testing::Test::RecordProperty("TEST_ID", "3ebf7f6d-81ef-45d6-83a6-80f8588cbba6");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
 
     EXPECT_TRUE(m_sut.pop().has_value());
@@ -227,6 +235,7 @@ TEST_F(stack_test, popCreatesSpaceForAnotherElement)
 TEST_F(stack_test, TestClassDTorIsCalledWhenStackGoesOutOfScope)
 {
     ::testing::Test::RecordProperty("TEST_ID", "3c496cb7-898b-4a65-a405-c42cbd7f0d7b");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     {
         stack<TestClass, STACK_SIZE> sut;
         sut.push();
@@ -239,6 +248,8 @@ TEST_F(stack_test, TestClassDTorIsCalledWhenStackGoesOutOfScope)
 TEST_F(stack_test, StackDestroysElementsInReverseOrder)
 {
     ::testing::Test::RecordProperty("TEST_ID", "fb38b063-4921-46ae-bdf2-922f49a9ab41");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-6");
     {
         stack<TestClass, STACK_SIZE> sut;
         for (uint32_t i{0}; i < STACK_SIZE; ++i)
@@ -257,6 +268,9 @@ TEST_F(stack_test, StackDestroysElementsInReverseOrder)
 TEST_F(stack_test, CopyConstructorWorksAndCallsTestClassCopyConstructor)
 {
     ::testing::Test::RecordProperty("TEST_ID", "2e9d78a8-9553-42c1-b7f1-a9b26c4fc23b");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-2");
+
     constexpr uint32_t ELEMENT{13};
     m_sut.push(ELEMENT, ELEMENT, ELEMENT);
 
@@ -269,6 +283,7 @@ TEST_F(stack_test, CopyConstructorWorksAndCallsTestClassCopyConstructor)
 TEST_F(stack_test, CopyCtorWithOneElementLeadsToEqualCtorAndDtorCalls)
 {
     ::testing::Test::RecordProperty("TEST_ID", "dc44fcdc-ced6-4345-822b-58b9e58baf85");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     constexpr uint32_t ELEMENT{37};
     {
         stack<TestClass, STACK_SIZE> other;
@@ -305,6 +320,7 @@ TEST_F(stack_test, CopyCtorWithOneElementLeadsToEqualCtorAndDtorCalls)
 TEST_F(stack_test, CopyConstructorWithEmptyStackWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "08bfe7d9-233e-47cc-a7ca-5520eb6b99df");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     stack<TestClass, STACK_SIZE> testStack(m_sut);
     EXPECT_THAT(TestClass::copyCTor, Eq(0));
     EXPECT_THAT(testStack.size(), Eq(0));
@@ -313,6 +329,7 @@ TEST_F(stack_test, CopyConstructorWithEmptyStackWorks)
 TEST_F(stack_test, CopyConstructorWithFullStackWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "f5ff8a1c-8bd4-40a9-9b10-7e90f232d78a");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
 
     stack<TestClass, STACK_SIZE> testStack(m_sut);
@@ -330,6 +347,9 @@ TEST_F(stack_test, CopyConstructorWithFullStackWorks)
 TEST_F(stack_test, CopyAssignmentWithEmptySourceWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "0b563f12-e565-49d8-ba62-7d9a2323afdb");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-1");
+
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
 
@@ -344,6 +364,7 @@ TEST_F(stack_test, CopyAssignmentWithEmptySourceWorks)
 TEST_F(stack_test, CopyAssignmentWithEmptyDestinationWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "81ea12ea-14ad-474c-bfd7-72433c780ceb");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
 
@@ -365,6 +386,7 @@ TEST_F(stack_test, CopyAssignmentWithEmptyDestinationWorks)
 TEST_F(stack_test, CopyAssignmentWithLargerDestinationWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "2f07ec25-fd62-414f-bb41-9284ce9f69b2");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
     testStack.push(9U, 11U, 13U);
@@ -382,6 +404,7 @@ TEST_F(stack_test, CopyAssignmentWithLargerDestinationWorks)
 TEST_F(stack_test, CopyAssignmentWithLargerSourceWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "1a001c09-abc2-4518-a47a-30d41aca3be4");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
     testStack.push(17U, 19U, 23U);
@@ -404,6 +427,10 @@ TEST_F(stack_test, CopyAssignmentWithLargerSourceWorks)
 TEST_F(stack_test, MoveConstructorWorksAndCallsTestClassMoveConstructor)
 {
     ::testing::Test::RecordProperty("TEST_ID", "e3ad8e37-a95a-4f35-bee0-c83961c626a7");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-3");
+    ::testing::Test::RecordProperty("req", "ICO-5");
+
     constexpr uint32_t ELEMENT{46};
     m_sut.push(ELEMENT, ELEMENT, ELEMENT);
     stack<TestClass, STACK_SIZE> testStack(std::move(m_sut));
@@ -417,6 +444,10 @@ TEST_F(stack_test, MoveConstructorWorksAndCallsTestClassMoveConstructor)
 TEST_F(stack_test, MoveConstructorWithEmptyStackWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "2cb3bfc8-ef86-4648-90e0-c0d4375834cc");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-3");
+    ::testing::Test::RecordProperty("req", "ICO-4");
+
     stack<TestClass, STACK_SIZE> testStack(std::move(m_sut));
     EXPECT_THAT(TestClass::moveCTor, Eq(0));
     EXPECT_THAT(testStack.size(), Eq(0));
@@ -426,6 +457,9 @@ TEST_F(stack_test, MoveConstructorWithEmptyStackWorks)
 TEST_F(stack_test, MoveConstructorWithFullStackWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "08661d3d-89d7-4ada-ba78-757e92eeb8d4");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-3");
+
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack(std::move(m_sut));
 
@@ -444,6 +478,9 @@ TEST_F(stack_test, MoveConstructorWithFullStackWorks)
 TEST_F(stack_test, MoveAssignmentWithEmptySourceWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "a06a3f8e-a886-43e2-b119-adc66c2af799");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-3");
+
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
 
@@ -461,6 +498,7 @@ TEST_F(stack_test, MoveAssignmentWithEmptySourceWorks)
 TEST_F(stack_test, MoveAssignmentWithEmptyDestinationWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "b67825b9-2053-453d-a2b7-5fe544f7b16d");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
 
@@ -483,6 +521,7 @@ TEST_F(stack_test, MoveAssignmentWithEmptyDestinationWorks)
 TEST_F(stack_test, MoveAssignmentWithLargerDestinationWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "de0b02d2-762e-41e7-a179-bd3f57da5dc6");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
     testStack.push(9U, 11U, 13U);
@@ -503,6 +542,7 @@ TEST_F(stack_test, MoveAssignmentWithLargerDestinationWorks)
 TEST_F(stack_test, MoveAssignmentWithLargerSourceWorks)
 {
     ::testing::Test::RecordProperty("TEST_ID", "7ff5a53d-18f7-447d-8bc8-04d2f9e38caa");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
     pushElements(STACK_SIZE);
     stack<TestClass, STACK_SIZE> testStack;
     testStack.push(17U, 19U, 23U);
@@ -522,4 +562,25 @@ TEST_F(stack_test, MoveAssignmentWithLargerSourceWorks)
     }
     EXPECT_THAT(m_sut.size(), Eq(0));
 }
+
+/*
+TEST_F(stack_test, AssignmentOperatorsWithSelf)
+{
+    ::testing::Test::RecordProperty("TEST_ID", "7ff5a53d-18f7-447d-8bc8-04d2f9e38ca1");
+    ::testing::Test::RecordProperty("cpptest_filename", __FILE__);
+    ::testing::Test::RecordProperty("req", "ICO-8");
+    stack<TestClass, STACK_SIZE> testStack1;
+    stack<TestClass, STACK_SIZE> & testStack3 = testStack1;
+    stack<TestClass, STACK_SIZE> & testStack2 = testStack3;
+
+    testStack1.push(17U, 19U, 23U);
+    
+    testStack1 = testStack3;
+    testStack2 = static_cast<stack<TestClass, STACK_SIZE> &&>(testStack3);
+
+    EXPECT_THAT(testStack1.size(), Eq(3));
+    EXPECT_THAT(testStack2.size(), Eq(3));
+    EXPECT_THAT(testStack3.size(), Eq(3));
+}
+*/
 } // namespace

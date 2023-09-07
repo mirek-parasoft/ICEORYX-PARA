@@ -35,7 +35,7 @@ class IndexQueueTest : public ::testing::Test
     Queue fullQueue{Queue::ConstructFull};
 };
 
-TEST(LockFreeQueueTest, capacityIsConsistent)
+TEST(IndexQueueTest, capacityIsConsistent)
 {
     ::testing::Test::RecordProperty("TEST_ID", "86d94598-7271-45a1-a6c9-afad0bc8cc8b");
     IndexQueue<37U> q;
