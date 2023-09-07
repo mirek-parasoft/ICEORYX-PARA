@@ -59,14 +59,14 @@ class StringToMessage : public IpcInterfaceBase
 class CMqInterfaceStartupRace_test : public Test
 {
   public:
-    CMqInterfaceStartupRace_test()
-        : m_appQueue{platform::IoxIpcChannelType::create()}
-    {
-    }
-
     virtual void SetUp()
     {
-        ASSERT_THAT(m_roudiQueue.has_error(), false);
+        platform::IoxIpcChannelType::Builder_t()
+            .name(roudi::IPC_CHANNEL_ROUDI_NAME)
+            .channelSide(IpcChannelSide::SERVER)
+            .create()
+            .and_then([this](auto& channel) { this->m_roudiQueue.emplace(std::move(channel)); });
+        ASSERT_THAT(m_roudiQueue.has_value(), true);
     }
     virtual void TearDown()
     {
@@ -102,21 +102,24 @@ class CMqInterfaceStartupRace_test : public Test
         regAck << IpcMessageTypeToString(IpcMessageType::REG_ACK) << DUMMY_SHM_SIZE << DUMMY_SHM_OFFSET
                << oldMsg.getElementAtIndex(INDEX_OF_TIMESTAMP) << DUMMY_SEGMENT_ID << SEND_KEEP_ALIVE;
 
-        if (m_appQueue.has_error())
+        if (!m_appQueue.has_value())
         {
-            m_appQueue = platform::IoxIpcChannelType::create(MqAppName, IpcChannelSide::CLIENT);
+            platform::IoxIpcChannelType::Builder_t()
+                .name(MqAppName)
+                .channelSide(IpcChannelSide::CLIENT)
+                .create()
+                .and_then([this](auto& channel) { this->m_appQueue.emplace(std::move(channel)); });
         }
-        ASSERT_THAT(m_appQueue.has_error(), false);
+        ASSERT_THAT(m_appQueue.has_value(), true);
 
         ASSERT_FALSE(m_appQueue->send(regAck.getMessage()).has_error());
     }
 
     /// @note smart_lock in combination with optional is currently not really usable
     std::mutex m_roudiQueueMutex;
-    platform::IoxIpcChannelType::result_t m_roudiQueue{
-        platform::IoxIpcChannelType::create(roudi::IPC_CHANNEL_ROUDI_NAME, IpcChannelSide::SERVER)};
+    optional<platform::IoxIpcChannelType> m_roudiQueue;
     std::mutex m_appQueueMutex;
-    platform::IoxIpcChannelType::result_t m_appQueue;
+    optional<platform::IoxIpcChannelType> m_appQueue;
 };
 
 #if !defined(__APPLE__)
@@ -145,7 +148,10 @@ TEST_F(CMqInterfaceStartupRace_test, ObsoleteRouDiMq)
             exit(EXIT_FAILURE);
         });
 
-        auto m_roudiQueue2 = platform::IoxIpcChannelType::create(roudi::IPC_CHANNEL_ROUDI_NAME, IpcChannelSide::SERVER);
+        auto m_roudiQueue2 = platform::IoxIpcChannelType::Builder_t()
+                                 .name(roudi::IPC_CHANNEL_ROUDI_NAME)
+                                 .channelSide(IpcChannelSide::SERVER)
+                                 .create();
 
         // check if the app retries to register at RouDi
         request = m_roudiQueue2->timedReceive(15_s);
@@ -193,7 +199,10 @@ TEST_F(CMqInterfaceStartupRace_test, ObsoleteRouDiMqWithFullMq)
             exit(EXIT_FAILURE);
         });
 
-        auto newRoudi = platform::IoxIpcChannelType::create(roudi::IPC_CHANNEL_ROUDI_NAME, IpcChannelSide::SERVER);
+        auto newRoudi = platform::IoxIpcChannelType::Builder_t()
+                            .name(roudi::IPC_CHANNEL_ROUDI_NAME)
+                            .channelSide(IpcChannelSide::SERVER)
+                            .create();
 
         // check if the app retries to register at RouDi
         auto request = newRoudi->timedReceive(15_s);

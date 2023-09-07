@@ -1,4 +1,5 @@
 // Copyright (c) 2021 - 2022 by Apex.AI Inc. All rights reserved.
+// Copyright (c) 2023 by Mathias Kraus <elboberido@m-hias.de>. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,13 +17,13 @@
 #ifndef IOX_DUST_POSIX_WRAPPER_NAMED_PIPE_HPP
 #define IOX_DUST_POSIX_WRAPPER_NAMED_PIPE_HPP
 
-#include "iceoryx_dust/design/creation.hpp"
 #include "iceoryx_dust/iceoryx_dust_deployment.hpp"
 #include "iceoryx_hoofs/concurrent/lockfree_queue.hpp"
 #include "iceoryx_hoofs/internal/posix_wrapper/ipc_channel.hpp"
 #include "iceoryx_hoofs/internal/posix_wrapper/shared_memory_object.hpp"
 #include "iceoryx_hoofs/posix_wrapper/unnamed_semaphore.hpp"
 #include "iceoryx_platform/semaphore.hpp"
+#include "iox/builder.hpp"
 #include "iox/duration.hpp"
 #include "iox/expected.hpp"
 #include "iox/optional.hpp"
@@ -35,7 +36,9 @@ namespace iox
 {
 namespace posix
 {
-class NamedPipe : public DesignPattern::Creation<NamedPipe, IpcChannelError>
+class NamedPipeBuilder;
+
+class NamedPipe
 {
   public:
     // no system restrictions at all, except available memory. MAX_MESSAGE_SIZE and MAX_NUMBER_OF_MESSAGES can be
@@ -52,15 +55,14 @@ class NamedPipe : public DesignPattern::Creation<NamedPipe, IpcChannelError>
     /// NOLINTNEXTLINE(hicpp-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
     static constexpr const char NAMED_PIPE_PREFIX[] = "iox_np_";
 
+    using Builder_t = NamedPipeBuilder;
+
     using Message_t = string<MAX_MESSAGE_SIZE>;
     using MessageQueue_t = concurrent::LockFreeQueue<Message_t, MAX_NUMBER_OF_MESSAGES>;
 
+    NamedPipe() noexcept = delete;
     NamedPipe(const NamedPipe&) = delete;
     NamedPipe& operator=(const NamedPipe&) = delete;
-
-    /// @brief For compatibility with IpcChannel alias, default ctor which creates
-    ///        an uninitialized NamedPipe.
-    NamedPipe() noexcept;
 
     NamedPipe(NamedPipe&& rhs) noexcept;
     NamedPipe& operator=(NamedPipe&& rhs) noexcept;
@@ -103,33 +105,22 @@ class NamedPipe : public DesignPattern::Creation<NamedPipe, IpcChannelError>
     expected<std::string, IpcChannelError> timedReceive(const units::Duration& timeout) const noexcept;
 
   private:
-    friend class DesignPattern::Creation<NamedPipe, IpcChannelError>;
+    friend class NamedPipeBuilder;
 
-    /// @brief constructor which creates a named pipe. This creates a shared memory file with the
-    ///        prefix NAMED_PIPE_PREFIX concatenated with name.
-    /// @param[in] name the name of the named pipe
-    /// @param[in] channelSide defines the channel side (server creates the shared memory, clients opens it)
-    /// @param[in] maxMsgSize maximum message size, must be less or equal than MAX_MESSAGE_SIZE
-    /// @param[in] maxMsgNumber the maximum number of messages, must be less or equal than MAX_NUMBER_OF_MESSAGES
-    NamedPipe(const IpcChannelName_t& name,
-              const IpcChannelSide channelSide,
-              const size_t maxMsgSize = MAX_MESSAGE_SIZE,
-              const uint64_t maxMsgNumber = MAX_NUMBER_OF_MESSAGES) noexcept;
+    class NamedPipeData;
+    NamedPipe(SharedMemoryObject&& sharedMemory, NamedPipeData* data) noexcept;
 
     template <typename Prefix>
-    static IpcChannelName_t convertName(const Prefix& p, const IpcChannelName_t& name) noexcept;
+    static IpcChannelName_t mapToSharedMemoryName(const Prefix& p, const IpcChannelName_t& name) noexcept;
 
     /// @brief destroys an initialized named pipe.
     /// @return is always successful
     expected<void, IpcChannelError> destroy() noexcept;
 
-  private:
-    optional<SharedMemoryObject> m_sharedMemory;
-
     class NamedPipeData
     {
       public:
-        NamedPipeData(bool& isInitialized, IpcChannelError& error, const uint32_t maxMsgNumber) noexcept;
+        NamedPipeData() noexcept = default;
         NamedPipeData(const NamedPipeData&) = delete;
         NamedPipeData(NamedPipeData&& rhs) = delete;
 
@@ -139,6 +130,8 @@ class NamedPipe : public DesignPattern::Creation<NamedPipe, IpcChannelError>
 
         UnnamedSemaphore& sendSemaphore() noexcept;
         UnnamedSemaphore& receiveSemaphore() noexcept;
+
+        expected<void, IpcChannelError> initialize(const uint32_t maxMsgNumber) noexcept;
 
         bool waitForInitialization() const noexcept;
         bool hasValidState() const noexcept;
@@ -156,9 +149,31 @@ class NamedPipe : public DesignPattern::Creation<NamedPipe, IpcChannelError>
         optional<UnnamedSemaphore> m_receiveSemaphore;
     };
 
-
+  private:
+    SharedMemoryObject m_sharedMemory;
     NamedPipeData* m_data = nullptr;
 };
+
+class NamedPipeBuilder
+{
+    /// @brief Defines the named pipe name
+    IOX_BUILDER_PARAMETER(IpcChannelName_t, name, "")
+
+    /// @brief Defines how the named pipe is opened, i.e. as client or server
+    IOX_BUILDER_PARAMETER(IpcChannelSide, channelSide, IpcChannelSide::CLIENT)
+
+    /// @brief Defines the max message size of the named pipe
+    IOX_BUILDER_PARAMETER(size_t, maxMsgSize, NamedPipe::MAX_MESSAGE_SIZE)
+
+    /// @brief Defines the max number of messages for the named pipe.
+    IOX_BUILDER_PARAMETER(uint64_t, maxMsgNumber, NamedPipe::MAX_NUMBER_OF_MESSAGES)
+
+  public:
+    /// @brief create a named pipe
+    /// @return On success a 'NamedPipe' is returned and on failure an 'IpcChannelError'.
+    expected<NamedPipe, IpcChannelError> create() const noexcept;
+};
+
 } // namespace posix
 } // namespace iox
 

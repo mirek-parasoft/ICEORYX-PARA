@@ -52,15 +52,6 @@ class UnixDomainSocket_test : public Test
   public:
     void SetUp() override
     {
-        auto serverResult = UnixDomainSocket::create(
-            goodName, IpcChannelSide::SERVER, UnixDomainSocket::MAX_MESSAGE_SIZE, MaxMsgNumber);
-        ASSERT_THAT(serverResult.has_error(), Eq(false));
-        server = std::move(serverResult.value());
-
-        auto clientResult = UnixDomainSocket::create(
-            goodName, IpcChannelSide::CLIENT, UnixDomainSocket::MAX_MESSAGE_SIZE, MaxMsgNumber);
-        ASSERT_THAT(clientResult.has_error(), Eq(false));
-        client = std::move(clientResult.value());
     }
 
     void TearDown() override
@@ -118,8 +109,20 @@ class UnixDomainSocket_test : public Test
     const std::chrono::milliseconds WAIT_IN_MS{10};
     std::atomic_bool doWaitForThread{true};
     static constexpr uint64_t MaxMsgNumber = 10U;
-    UnixDomainSocket server;
-    UnixDomainSocket client;
+    UnixDomainSocket server{UnixDomainSocketBuilder()
+                                .name(goodName)
+                                .channelSide(IpcChannelSide::SERVER)
+                                .maxMsgSize(UnixDomainSocket::MAX_MESSAGE_SIZE)
+                                .maxMsgNumber(MaxMsgNumber)
+                                .create()
+                                .expect("Valid UnixDomainSocket")};
+    UnixDomainSocket client{UnixDomainSocketBuilder()
+                                .name(goodName)
+                                .channelSide(IpcChannelSide::CLIENT)
+                                .maxMsgSize(UnixDomainSocket::MAX_MESSAGE_SIZE)
+                                .maxMsgNumber(MaxMsgNumber)
+                                .create()
+                                .expect("Valid UnixDomainSocket")};
 };
 
 constexpr uint64_t UnixDomainSocket_test::MaxMsgNumber;
